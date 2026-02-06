@@ -144,11 +144,11 @@ function move(gameState: GameState): MoveResponse {
   // Choose a random move from the safe moves
   // Strategy chooser:
   let nextMove = ""
-  if (gameState.you.length > 5) {
+  if (gameState.you.length > 5 && gameState.turn % 5) {
     nextMove = moveCloserToMiddle(gameState, safeMoves, gameState.board.width / 2, gameState.board.height / 2)
   } else {
-    tryToEatNearbyFood(gameState, safeMoves)
-    nextMove = safeMoves[Math.floor(Math.random() * safeMoves.length)];
+    nextMove = tryToEatNearbyFood(gameState, safeMoves)
+    // nextMove = safeMoves[Math.floor(Math.random() * safeMoves.length)];
   }
 
   // TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
