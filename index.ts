@@ -69,10 +69,46 @@ function move(gameState: GameState): MoveResponse {
 
   // TODO: Step 1 - Prevent your Battlesnake from moving out of bounds
   let boardWidth = gameState.board.width;
-  // boardHeight = gameState.board.height;
+  let boardHeight = gameState.board.height;
+
+
+  // er vi langs venstre vegg
+  if (gameState.you.head.x == 0) {
+    isMoveSafe.left = false;
+  }
+
+  if (gameState.you.head.x == boardWidth - 1) {
+    isMoveSafe.right = false;
+  }
+  if (gameState.you.head.y == 0) {
+    isMoveSafe.down = false;
+  }
+  if (gameState.you.head.y == boardHeight - 1) {
+    isMoveSafe.up = false;
+  }
 
   // TODO: Step 2 - Prevent your Battlesnake from colliding with itself
   // myBody = gameState.you.body;
+
+  gameState.you.body.forEach((bodyBlock, index) => {
+
+    if (gameState.you.body.length - 1 == index) {
+      return;
+    }
+
+    if (bodyBlock.x + 1 == myHead.x && bodyBlock.y == myHead.y) {        // Body is left of head, don't move left
+      isMoveSafe.left = false;
+
+    } else if (bodyBlock.x - 1 == myHead.x && bodyBlock.y == myHead.y) { // Body is right of head, don't move right
+      isMoveSafe.right = false;
+
+    } else if (bodyBlock.y + 1 == myHead.y && bodyBlock.x == myHead.x) { // Body is below head, don't move down
+      isMoveSafe.down = false;
+
+    } else if (bodyBlock.y - 1 == myHead.y && bodyBlock.x == myHead.x) { // Body is above head, don't move up
+      isMoveSafe.up = false;
+    }
+  })
 
   // TODO: Step 3 - Prevent your Battlesnake from colliding with other Battlesnakes
   // opponents = gameState.board.snakes;
