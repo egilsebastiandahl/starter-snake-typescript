@@ -11,7 +11,7 @@
 // For more info see docs.battlesnake.com
 
 import runServer from './server';
-import { GameState, InfoResponse, MoveResponse } from './types';
+import { Coord, GameState, InfoResponse, MoveResponse } from './types';
 
 // info is called when you create your Battlesnake on play.battlesnake.com
 // and controls your Battlesnake's appearance
@@ -88,30 +88,51 @@ function move(gameState: GameState): MoveResponse {
   }
 
   // TODO: Step 2 - Prevent your Battlesnake from colliding with itself
-  // myBody = gameState.you.body;
 
-  gameState.you.body.forEach((bodyBlock, index) => {
+  // gameState.you.body.forEach((bodyBlock, index) => {
 
-    if (gameState.you.body.length - 1 == index) {
-      return;
-    }
+  //   if (gameState.you.body.length - 1 == index) {
+  //     return;
+  //   }
 
-    if (bodyBlock.x + 1 == myHead.x && bodyBlock.y == myHead.y) {        // Body is left of head, don't move left
-      isMoveSafe.left = false;
+  //   if (bodyBlock.x + 1 == myHead.x && bodyBlock.y == myHead.y) {        // Body is left of head, don't move left
+  //     isMoveSafe.left = false;
 
-    } else if (bodyBlock.x - 1 == myHead.x && bodyBlock.y == myHead.y) { // Body is right of head, don't move right
-      isMoveSafe.right = false;
+  //   } else if (bodyBlock.x - 1 == myHead.x && bodyBlock.y == myHead.y) { // Body is right of head, don't move right
+  //     isMoveSafe.right = false;
 
-    } else if (bodyBlock.y + 1 == myHead.y && bodyBlock.x == myHead.x) { // Body is below head, don't move down
-      isMoveSafe.down = false;
+  //   } else if (bodyBlock.y + 1 == myHead.y && bodyBlock.x == myHead.x) { // Body is below head, don't move down
+  //     isMoveSafe.down = false;
 
-    } else if (bodyBlock.y - 1 == myHead.y && bodyBlock.x == myHead.x) { // Body is above head, don't move up
-      isMoveSafe.up = false;
-    }
-  })
+  //   } else if (bodyBlock.y - 1 == myHead.y && bodyBlock.x == myHead.x) { // Body is above head, don't move up
+  //     isMoveSafe.up = false;
+  //   }
+  // })
 
   // TODO: Step 3 - Prevent your Battlesnake from colliding with other Battlesnakes
-  // opponents = gameState.board.snakes;
+  gameState.board.snakes.forEach((snake) => {
+    snake.body.forEach((bodyBlock, index) => {
+
+      if (snake.body.length - 1 == index) {
+        return;
+      }
+
+      if (bodyBlock.x + 1 == myHead.x && bodyBlock.y == myHead.y) {        // Body is left of head, don't move left
+        isMoveSafe.left = false;
+
+      } else if (bodyBlock.x - 1 == myHead.x && bodyBlock.y == myHead.y) { // Body is right of head, don't move right
+        isMoveSafe.right = false;
+
+      } else if (bodyBlock.y + 1 == myHead.y && bodyBlock.x == myHead.x) { // Body is below head, don't move down
+        isMoveSafe.down = false;
+
+      } else if (bodyBlock.y - 1 == myHead.y && bodyBlock.x == myHead.x) { // Body is above head, don't move up
+        isMoveSafe.up = false;
+      }
+    })
+  })
+
+
 
   // Are there any safe moves left?
   const safeMoves = Object.keys(isMoveSafe).filter(key => isMoveSafe[key]);
@@ -121,13 +142,81 @@ function move(gameState: GameState): MoveResponse {
   }
 
   // Choose a random move from the safe moves
-  const nextMove = safeMoves[Math.floor(Math.random() * safeMoves.length)];
+  // Strategy chooser:
+  let nextMove = ""
+  if (gameState.you.length > 5) {
+    nextMove = moveCloserToMiddle(gameState, safeMoves, gameState.board.width / 2, gameState.board.height / 2)
+  } else {
+    tryToEatNearbyFood(gameState, safeMoves)
+    nextMove = safeMoves[Math.floor(Math.random() * safeMoves.length)];
+  }
 
   // TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
-  // food = gameState.board.food;
+  const food = gameState.board.food;
 
   console.log(`MOVE ${gameState.turn}: ${nextMove}`)
   return { move: nextMove };
+}
+
+
+const moveCloserToMiddle = (gameState: GameState, safeMoves: string[], targetX: number, targetY: number): string => {
+  let nextMove = "";
+
+  // desired start coordinate = 6,6
+  let head = gameState.you.head
+  if (head.x < targetX) {
+    if (safeMoves.includes("right")) {
+      nextMove = "right";
+    }
+  }
+
+  if (head.x > targetX) {
+    if (safeMoves.includes("left")) {
+      nextMove = "left";
+    }
+  }
+  if (head.y > targetY) {
+    if (safeMoves.includes("down")) {
+      nextMove = "down";
+    }
+  }
+  if (head.y < targetY) {
+    if (safeMoves.includes("up")) {
+      nextMove = "up";
+    }
+  }
+
+
+
+  return nextMove
+}
+
+const interceptEnemyHead = (gameState: GameState, safeMoves: string[]): string => {
+  let nextMove = "";
+  // desired start coordinate = 6,6
+
+
+
+  return nextMove
+}
+
+const tryToEatNearbyFood = (gameState: GameState, safeMoves: string[]): string => {
+  let closestFood: Coord = { x: 6, y: 6 };
+  let rangeToClosestFood = 10000;
+  gameState.board.food.forEach((food) => {
+    let absX = Math.abs(gameState.you.head.x - food.x)
+    let absY = Math.abs(gameState.you.head.y - food.y)
+
+    let disctance = Math.sqrt(Math.pow(absX, 2) + Math.pow(absY, 2))
+
+    if (rangeToClosestFood > disctance) {
+      closestFood = food;
+    }
+
+  })
+
+  return moveCloserToMiddle(gameState, safeMoves, closestFood.x, closestFood.y)
+
 }
 
 runServer({
